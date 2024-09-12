@@ -51,7 +51,7 @@ def calculate_similarity(df1, df2):
 
 def is_invoice_text(text):
     # Define simple invoice detection criteria
-    invoice_keywords = ['invoice', 'invoice no', 'invoice number', 'date of issue']
+    invoice_keywords = ['invoice', 'invoice no', 'invoice number', 'date of issue', 'Invoice','INVOICE']
     return any(keyword.lower() in text.lower() for keyword in invoice_keywords)
 
 def process_pdf(pdf_path, master_df):
@@ -103,7 +103,7 @@ st.markdown("""
             font-size: 1.5em;
             font-weight: normal;
             margin: 0;
-            padding: 0.2em 0;
+            padding: 0em 0;
         }
         .stFileUploader>div>div {
             background-color: black;
@@ -146,7 +146,7 @@ st.markdown("""
         .file-name {
             color: green;
             font-size: 1.2em;
-            text-align: center;
+            text-align: right;
             margin-top: 1em;
             display: block;
         }
@@ -168,7 +168,7 @@ st.markdown("""
             text-align: left;
             font-size: 1.2em;
             color: white;
-            margin-bottom: 0.5em;
+            margin-bottom: 0em;
         }
     </style>
 """, unsafe_allow_html=True)
