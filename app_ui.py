@@ -215,7 +215,14 @@ if uploaded_file is not None:
     
     # Load the master DataFrame
     master_df_path = r'https://raw.githubusercontent.com/tanmay1101/Duplicate-Invoice-NLP/main/master_df.csv'
-    master_df = pd.read_csv(master_df_path)
+    
+    try:
+        master_df = pd.read_csv(master_df_path)
+    
+    except FileNotFoundError:
+        
+        st.error(f"File not found: {master_df_path}")
+        master_df = pd.DataFrame() 
     
     # Process the uploaded PDF
     result_df = process_pdf("uploaded_invoice.pdf", master_df)
