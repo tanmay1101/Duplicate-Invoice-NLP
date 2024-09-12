@@ -214,7 +214,7 @@ if uploaded_file is not None:
         f.write(uploaded_file.getbuffer())
     
     # Load the master DataFrame
-    master_df_path = r'C:\Gen-AI\Invoice Fraud\master_df.csv'
+    master_df_path = r'https://raw.githubusercontent.com/tanmay1101/Duplicate-Invoice-NLP/main/master_df.csv'
     master_df = pd.read_csv(master_df_path)
     
     # Process the uploaded PDF
