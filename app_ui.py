@@ -47,7 +47,13 @@ def calculate_similarity(df1, df2):
     similarities = cosine_similarity(tfidf_matrix[:len(df1)], tfidf_matrix[len(df1):])
     similarity_percentages = [max(sim) * 100 for sim in similarities]
     df1['Similarity'] = similarity_percentages
-    return df1
+    
+    # Find matched rows in master_df with similarity above a threshold
+    threshold = 70
+    matched_indices = [i for i, score in enumerate(similarity_percentages) if score > threshold]
+    matched_rows = df2.iloc[matched_indices] if matched_indices else pd.DataFrame()
+    
+    return df1, matched_rows
 
 def is_invoice_text(text):
     # Define simple invoice detection criteria
@@ -71,10 +77,10 @@ def process_pdf(pdf_path, master_df):
                 invoice_number, date, invoice_summary = extract_invoice_info(text)
                 data.append([invoice_number, date, invoice_summary])
             df = pd.DataFrame(data, columns=['Invoice no', 'Date of issue', 'Invoice Summary'])
-        df = calculate_similarity(df, master_df)
-        return df, True
+        df, matched_rows = calculate_similarity(df, master_df)
+        return df, matched_rows, True
     else:
-        return pd.DataFrame(), False
+        return pd.DataFrame(), pd.DataFrame(), False
 
 # Streamlit App
 st.set_page_config(page_title="Duplicate Invoice Analyser", page_icon=":memo:", layout="wide")
@@ -187,21 +193,30 @@ if uploaded_file is not None:
     
     master_df = pd.read_csv(master_df_url)
     
-    result_df, is_invoice = process_pdf("uploaded_invoice.pdf", master_df)
+    result_df, matched_rows, is_invoice = process_pdf("uploaded_invoice.pdf", master_df)
     
     if is_invoice:
         similarity = result_df['Similarity'].iloc[0] if not result_df.empty else 0
         
-        st.write("Extracted Invoice Details and Fraud Check Results:")
+        st.write("Extracted Invoice Details and Duplicate Check Results:")
         if similarity > 70:
-            st.markdown(f"<div class='stError'>Fraud/duplicate invoice detected with {similarity:.2f}% similarity.</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='stError'>Duplicate invoice detected with {similarity:.2f}% similarity.</div>", unsafe_allow_html=True)
         else:
-            st.markdown(f"<div class='stSuccess'>Invoice is correct, no fraud detected.</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='stSuccess'>Invoice is correct, no duplicate detected.</div>", unsafe_allow_html=True)
         
         st.dataframe(result_df.style.set_table_styles(
             [{'selector': 'thead th', 'props': [('background-color', '#333'), ('color', 'white')]},
              {'selector': 'tbody td', 'props': [('background-color', 'black'), ('color', 'white')]}]
         ))
+        
+        if not matched_rows.empty:
+            st.write("Matched Rows from Master Data:")
+            st.dataframe(matched_rows.style.set_table_styles(
+                [{'selector': 'thead th', 'props': [('background-color', '#333'), ('color', 'white')]},
+                 {'selector': 'tbody td', 'props': [('background-color', 'black'), ('color', 'white')]}]
+            ))
+        else:
+            st.write("No matching rows found in master data.")
         
         st.download_button(
             label="Download Results as CSV",
